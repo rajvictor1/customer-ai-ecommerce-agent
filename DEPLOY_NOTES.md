@@ -21,17 +21,13 @@ Both repos are already productionized with:
 
 ### Step 1 — Push the CI workflow
 
-The GitHub Actions workflow file `.github/workflows/ci.yml` exists locally but was not pushed due to OAuth scope limits. Run this first on each repo:
+The GitHub Actions workflow file `.github/workflows/ci.yml` exists locally and should be pushed:
 
 ```bash
-git clone https://github.com/rajvictor1/customer-ai-ecommerce-agent.git
-cd customer-ai-ecommerce-agent
 git add .github/workflows/ci.yml
 git commit -m "ci: add GitHub Actions workflow"
 git push origin main
 ```
-
-Then do the same for `customer-ai-healthcare-agent`.
 
 ### Step 2 — Add real environment variables
 
@@ -44,15 +40,15 @@ cp .env.example .env
 Required keys:
 
 ```text
-DATABASE_URL=sqlite:///data/conversations.db   # or postgresql://user:pass@host/db
-SECRET_KEY=<generate a strong random key>
-OPENAI_API_KEY=<your OpenAI API key>
+DATABASE_URL=sqlite:///data/conversations.db   # or postgresql://user:***@host/db
+SECRET_KEY=*** a strong random key>
+OPENAI_API_KEY=*** OpenAI API key>
 OPENAI_MODEL=gpt-4o-mini
-AUTH_ISSUER=<your OAuth/OIDC issuer>
-AUTH_CLIENT_ID=<your OAuth client ID>
-AUTH_CLIENT_SECRET=<your OAuth client secret>
+AUTH_ISSUER=*** OAuth/OIDC issuer>
+AUTH_CLIENT_ID=*** OAuth client ID>
+AUTH_CLIENT_SECRET=*** OAuth client secret>
 TWILIO_ACCOUNT_SID=<Twilio SID>
-TWILIO_AUTH_TOKEN=<Twilio token>
+TWILIO_AUTH_TOKEN=*** token>
 TWILIO_WHATSAPP_NUMBER=<Twilio WhatsApp number>
 LOG_LEVEL=INFO
 ```
@@ -63,7 +59,7 @@ For local dev, you only need `SECRET_KEY`. OpenAI key enables LLM classification
 
 | File | What to replace |
 |---|---|
-| `app/auth.py` | Stub `get_current_user` with real OAuth2/OIDC token validation (Auth0, Keycloak, Azure AD, patient portal SSO). |
+| `app/auth.py` | Stub `get_current_user` with real OAuth2/OIDC token validation (Auth0, Keycloak, Azure AD, customer portal SSO). |
 | `app/backend_mock.py` | Mock data with real API clients: OMS for e-commerce, EHR/scheduling/pharmacy/billing for healthcare. |
 | `app/whatsapp.py` | Already calls Twilio SDK if credentials are set. Verify webhook URL in Twilio console. |
 
@@ -90,7 +86,7 @@ Choose one platform from `deploy/`:
 
 # Fly.io
 fly launch --now
-fly secrets set DATABASE_URL=... OPENAI_API_KEY=... TWILIO_ACCOUNT_SID=... TWILIO_AUTH_TOKEN=... TWILIO_WHATSAPP_NUMBER=...
+fly secrets set DATABASE_URL=... OPENAI_API_KEY=*** TWILIO_ACCOUNT_SID=... TWILIO_AUTH_TOKEN=*** TWILIO_WHATSAPP_NUMBER=...
 fly deploy
 ```
 
@@ -104,7 +100,10 @@ Run these checks:
 
 ```bash
 curl https://your-domain/api/health
-curl -X POST https://your-domain/api/chat   -H "Content-Type: application/json"   -d '{"message":"Where is my order","customer_id":"cust_456","channel":"web"}'
+
+curl -X POST https://your-domain/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Where is my order","customer_id":"cust_456","channel":"web"}'
 ```
 
 For WhatsApp, configure Twilio webhook URL to `https://your-domain/api/webhook/whatsapp`.

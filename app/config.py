@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
+
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///data/conversations.db"
@@ -13,23 +14,9 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_WHATSAPP_NUMBER: str = ""
     LOG_LEVEL: str = "INFO"
-    CORS_ORIGINS: str = "http://localhost:8000,http://127.0.0.1:8000"
-    OMS_API_BASE_URL: str = ""
-    OMS_API_TOKEN: str = ""
-    CATALOG_API_BASE_URL: str = ""
-    CATALOG_API_TOKEN: str = ""
-    RETURNS_API_BASE_URL: str = ""
-    RETURNS_API_TOKEN: str = ""
-    PROMOTIONS_API_BASE_URL: str = ""
-    PROMOTIONS_API_TOKEN: str = ""
 
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
+    model_config = SettingsConfigDict(env_file=".env")
 
-    @property
-    def cors_origin_list(self) -> list[str]:
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
 @lru_cache()
 def get_settings():

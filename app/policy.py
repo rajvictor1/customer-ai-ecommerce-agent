@@ -2,18 +2,23 @@ import re
 from typing import Tuple
 from app.models import Conversation
 
+
 class PolicyLayer:
     def apply(self, conversation: Conversation, user_text: str) -> Tuple[bool, str, str]:
         conv = conversation
         text = user_text
 
-        # PII safety: do not process explicit sensitive data
-        if re.search(r"\bmy ssn\b|\bsocial security\b|\bpassword\b|\bcvv\b|\bcredit card number\b", text, re.I):
-            return True, "SAFETY_PII", "For your security, please don't share sensitive details like SSN, password, or CVV here. Contact support if needed."
+        # E-commerce guardrails
+        if re.search(r"\b(cvv|credit card number|my password|full card)\b", text, re.I):
+            return True, "ECOMMERCE_PII", "For your security, please don't share payment details here. Use our secure checkout or payment portal."
 
-        # Order tracking and returns don't require extra auth for demo customers
+        # Authentication requirement for sensitive actions
+        sensitive_intents = set()
         user_msg = conv.messages[-1] if conv.messages else None
-        if user_msg and user_msg.role == "user" and user_msg.intent in {"EC_ORDER_TRACK", "EC_RETURN_REFUND"}:
-            conv.context["authenticated"] = True
+        if user_msg and user_msg.role == "user" and user_msg.intent in sensitive_intents and not conv.context.get("authenticated"):
+            return True, "AUTH_REQUIRED", "To proceed, I need to verify your identity. Please provide your 4-digit PIN or customer ID."
 
         return False, "", ""
+
+    def looks_like_auth(self, text: str) -> bool:
+        return bool(re.search(r"\b\d{4,10}\b", text))
